@@ -1,0 +1,4 @@
+encryptionsalt: v1:h6CHR6MaYaw=:v1:2hkJvebLNvamF+DB:3GMhEszA/TBwvjwEEpjwC+XkUipn2g==
+config:
+  aws:profile: demo
+  aws:region: us-east-1
