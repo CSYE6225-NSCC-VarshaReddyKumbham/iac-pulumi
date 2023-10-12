@@ -2,3 +2,39 @@ encryptionsalt: v1:h6CHR6MaYaw=:v1:2hkJvebLNvamF+DB:3GMhEszA/TBwvjwEEpjwC+XkUipn
 config:
   aws:profile: demo
   aws:region: us-east-1
+  vpcCidrBlock: 10.0.0.0/16
+  publicSubnets: [
+            {
+                "cidr": "10.0.1.0/24",
+                "name": "public-subnet-1",
+                "az": "us-east-1a"
+            },
+            {
+                "cidr": "10.0.2.0/24",
+                "name": "public-subnet-2",
+                "az": "us-east-1b"
+            },
+            {
+                "cidr": "10.0.3.0/24",
+                "name": "public-subnet-3",
+                "az": "us-east-1c"
+            }
+        ]
+  privateSubnets: [
+            {
+                "cidr": "10.0.4.0/24",
+                "name": "private-subnet-1",
+                "az": "us-east-1a"
+            },
+            {
+                "cidr": "10.0.5.0/24",
+                "name": "private-subnet-2",
+                "az": "us-east-1b"
+            },
+            {
+                "cidr": "10.0.6.0/24",
+                "name": "private-subnet-3",
+                "az": "us-east-1c"
+            }
+        ]
+  publicRouteDestination: 0.0.0.0/0
