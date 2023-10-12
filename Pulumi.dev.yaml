@@ -3,6 +3,8 @@ config:
   aws:profile: dev
   aws:region: us-east-1
   vpcCidrBlock: 10.0.0.0/16
+  vpcName: csye6225-vpc-dev
+  igwName: csye6225-igw-dev
   publicSubnets: [
             {
                 "cidr": "10.0.1.0/24",

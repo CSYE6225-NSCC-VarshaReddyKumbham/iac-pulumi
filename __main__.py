@@ -6,17 +6,19 @@ vpc_cidr_block = config.require("vpcCidrBlock")
 public_subnets_config = config.require_object("publicSubnets")
 private_subnets_config = config.require_object("privateSubnets")
 public_route_destination = config.require("publicRouteDestination")
+vpc_name = config.require("vpcName")
+igw_name = config.require("igwName")
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
     tags={
-        "Name": "csye6225-dev",
+        "Name": vpc_name,
     })
 
 my_igw = aws.ec2.InternetGateway("igw",
     vpc_id = my_vpc.id,
     tags={
-        "Name": "csye6225-dev",
+        "Name": igw_name,
     })
 
 # Create public subnets
