@@ -19,13 +19,6 @@ my_igw = aws.ec2.InternetGateway("igw",
         "Name": "csye6225-dev",
     })
 
-<<<<<<< HEAD
-=======
-igw_attachment = aws.ec2.InternetGatewayAttachment("igw_attachment",
-    internet_gateway_id=my_igw.id,
-    vpc_id = my_vpc.id)
-
->>>>>>> upstream/main
 # Create public subnets
 public_subnets = []
 for subnet_config in public_subnets_config:
