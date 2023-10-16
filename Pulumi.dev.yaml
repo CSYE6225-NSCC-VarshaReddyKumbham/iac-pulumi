@@ -5,38 +5,14 @@ config:
   vpcCidrBlock: 10.0.0.0/16
   vpcName: csye6225-vpc-dev
   igwName: csye6225-igw-dev
-  publicSubnets: [
-            {
-                "cidr": "10.0.1.0/24",
-                "name": "public-subnet-1",
-                "az": "us-east-1a"
-            },
-            {
-                "cidr": "10.0.2.0/24",
-                "name": "public-subnet-2",
-                "az": "us-east-1b"
-            },
-            {
-                "cidr": "10.0.3.0/24",
-                "name": "public-subnet-3",
-                "az": "us-east-1c"
-            }
-        ]
-  privateSubnets: [
-            {
-                "cidr": "10.0.4.0/24",
-                "name": "private-subnet-1",
-                "az": "us-east-1a"
-            },
-            {
-                "cidr": "10.0.5.0/24",
-                "name": "private-subnet-2",
-                "az": "us-east-1b"
-            },
-            {
-                "cidr": "10.0.6.0/24",
-                "name": "private-subnet-3",
-                "az": "us-east-1c"
-            }
-        ]
   publicRouteDestination: 0.0.0.0/0
+  public_subnets_config : [
+    {"cidr_block": "10.0.1.0/24"},
+    {"cidr_block": "10.0.2.0/24"},
+    {"cidr_block": "10.0.3.0/24"}
+  ]
+  private_subnets_config : [
+    {"cidr_block": "10.0.4.0/24"},
+    {"cidr_block": "10.0.5.0/24"},
+    {"cidr_block": "10.0.6.0/24"},
+  ]

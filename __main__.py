@@ -3,11 +3,12 @@ import pulumi_aws as aws
 
 config = pulumi.Config()
 vpc_cidr_block = config.require("vpcCidrBlock")
-public_subnets_config = config.require_object("publicSubnets")
-private_subnets_config = config.require_object("privateSubnets")
+public_subnets_config = config.require_object("public_subnets_config")
+private_subnets_config = config.require_object("private_subnets_config")
 public_route_destination = config.require("publicRouteDestination")
 vpc_name = config.require("vpcName")
 igw_name = config.require("igwName")
+aws_region = config.get("aws:region")
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
@@ -21,12 +22,19 @@ my_igw = aws.ec2.InternetGateway("igw",
         "Name": igw_name,
     })
 
-# Create public subnets
+azs = aws.get_availability_zones(
+    state="available"
+)
+# Output the availability zones
+pulumi.export("availability_zones", azs.names)
+# Determine the number of public and private subnets to create
+num_of_azs = min(3, len(azs.names))
+
 public_subnets = []
-for subnet_config in public_subnets_config:
-    cidr = subnet_config["cidr"]
-    name = subnet_config["name"]
-    az = subnet_config["az"]
+for i in range(num_of_azs):
+    cidr = public_subnets_config[i]['cidr_block']
+    name = f'PublicSubnet{i+1}'
+    az = azs.names[i]
     public_subnet = aws.ec2.Subnet(name,
         vpc_id=my_vpc.id,
         availability_zone=az,
@@ -38,16 +46,16 @@ for subnet_config in public_subnets_config:
     )
     public_subnets.append(public_subnet.id)
 
-# Create private subnets (similar to public subnets)
 private_subnets = []
-for subnet_config in private_subnets_config:
-    cidr = subnet_config["cidr"]
-    name = subnet_config["name"]
-    az = subnet_config["az"]
+for i in range(num_of_azs):
+    cidr = private_subnets_config[i]['cidr_block']
+    name = f'PrivateSubnet{i+1}'
+    az = azs.names[i]
     private_subnet = aws.ec2.Subnet(name,
         vpc_id=my_vpc.id,
         availability_zone=az,
         cidr_block=cidr,
+        map_public_ip_on_launch=True,
         tags={
             "Name": name,
         }
