@@ -8,7 +8,8 @@ private_subnets_config = config.require_object("private_subnets_config")
 public_route_destination = config.require("publicRouteDestination")
 vpc_name = config.require("vpcName")
 igw_name = config.require("igwName")
-aws_region = config.get("aws:region")
+ami_id = config.require("ami_id")
+key_pair = config.require('key_pair')
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
@@ -96,3 +97,57 @@ for count, private_subnet in enumerate(private_subnets):
 
 pulumi.export('public route table id', public_route_table.id)
 pulumi.export('private route table id', private_route_table.id)
+
+size = 't2.micro'
+application_security_group = aws.ec2.SecurityGroup("application_security_group",
+    description="Allow TLS inbound traffic",
+    vpc_id=my_vpc.id,
+    ingress=[aws.ec2.SecurityGroupIngressArgs(
+        description="HTTPS",
+        from_port=443,
+        to_port=443,
+        protocol="tcp",
+        cidr_blocks=['0.0.0.0/0']
+    ),
+    aws.ec2.SecurityGroupIngressArgs(
+        description="HTTP",
+        from_port=80,
+        to_port=80,
+        protocol="tcp",
+        cidr_blocks=['0.0.0.0/0']
+    ),
+    aws.ec2.SecurityGroupIngressArgs(
+        description="SSH",
+        from_port=22,
+        to_port=22,
+        protocol="tcp",
+        cidr_blocks=['155.33.134.59/32']
+    ),
+    aws.ec2.SecurityGroupIngressArgs(
+        description="Webapp port",
+        from_port=3000,
+        to_port=3000,
+        protocol="tcp",
+        cidr_blocks=['0.0.0.0/0']
+    ),
+    ],
+    tags={
+        "Name": "application security group",
+    })
+
+application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
+    instance_type="t2.micro",
+    ami=ami_id,
+    subnet_id=public_subnets[0],
+    security_groups=[application_security_group.id],
+    associate_public_ip_address=True,
+    key_name=key_pair,
+    root_block_device={
+        "volume_size": 25,
+        "volume_type": "gp2",
+        "delete_on_termination": True,
+    },
+    tags={"Name": "Webapp Server"},
+)
+
+pulumi.export('publicIp', application_ec2_instance.public_ip)
