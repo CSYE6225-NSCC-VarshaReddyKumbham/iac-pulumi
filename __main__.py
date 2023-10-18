@@ -12,11 +12,10 @@ ami_id = config.require("ami_id")
 key_pair = config.require('key_pair')
 instance_type = config.require('instance_type')
 app_port = config.require('app_port')
-my_ip = config.require('my_ip')
-https_ingress_cidr_block = config.require('https_ingress_cidr_block')
-http_ingress_cidr_block = config.require('http_ingress_cidr_block')
-ssh_ingress_cidr_block = config.require('ssh_ingress_cidr_block')
-app_ingress_cidr_block = config.require('app_ingress_cidr_block')
+https_ingress_cidr_block = config.require_object('https_ingress_cidr_block')
+http_ingress_cidr_block = config.require_object('http_ingress_cidr_block')
+ssh_ingress_cidr_block = config.require_object('ssh_ingress_cidr_block')
+app_ingress_cidr_block = config.require_object('app_ingress_cidr_block')
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
