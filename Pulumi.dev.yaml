@@ -18,3 +18,9 @@ config:
   ]
   ami_id : "ami-0965d34d3bd887195"
   key_pair: "Webapp"
+  instance_type: "t2.micro"
+  app_port: 3000
+  https_ingress_cidr_block: ['0.0.0.0/0']
+  http_ingress_cidr_block: ['0.0.0.0/0']
+  ssh_ingress_cidr_block: ['155.33.134.59/32']
+  app_ingress_cidr_block: ['0.0.0.0/0']
