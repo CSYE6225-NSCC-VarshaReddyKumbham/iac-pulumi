@@ -10,6 +10,12 @@ vpc_name = config.require("vpcName")
 igw_name = config.require("igwName")
 ami_id = config.require("ami_id")
 key_pair = config.require('key_pair')
+instance_type = config.require('instance_type')
+app_port = config.require('app_port')
+https_ingress_cidr_block = config.require_object('https_ingress_cidr_block')
+http_ingress_cidr_block = config.require_object('http_ingress_cidr_block')
+ssh_ingress_cidr_block = config.require_object('ssh_ingress_cidr_block')
+app_ingress_cidr_block = config.require_object('app_ingress_cidr_block')
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
@@ -98,7 +104,6 @@ for count, private_subnet in enumerate(private_subnets):
 pulumi.export('public route table id', public_route_table.id)
 pulumi.export('private route table id', private_route_table.id)
 
-size = 't2.micro'
 application_security_group = aws.ec2.SecurityGroup("application_security_group",
     description="Allow TLS inbound traffic",
     vpc_id=my_vpc.id,
@@ -107,28 +112,28 @@ application_security_group = aws.ec2.SecurityGroup("application_security_group",
         from_port=443,
         to_port=443,
         protocol="tcp",
-        cidr_blocks=['0.0.0.0/0']
+        cidr_blocks=https_ingress_cidr_block
     ),
     aws.ec2.SecurityGroupIngressArgs(
         description="HTTP",
         from_port=80,
         to_port=80,
         protocol="tcp",
-        cidr_blocks=['0.0.0.0/0']
+        cidr_blocks=http_ingress_cidr_block
     ),
     aws.ec2.SecurityGroupIngressArgs(
         description="SSH",
         from_port=22,
         to_port=22,
         protocol="tcp",
-        cidr_blocks=['155.33.134.59/32']
+        cidr_blocks=ssh_ingress_cidr_block
     ),
     aws.ec2.SecurityGroupIngressArgs(
         description="Webapp port",
-        from_port=3000,
-        to_port=3000,
+        from_port=app_port,
+        to_port=app_port,
         protocol="tcp",
-        cidr_blocks=['0.0.0.0/0']
+        cidr_blocks=app_ingress_cidr_block
     ),
     ],
     tags={
@@ -136,7 +141,7 @@ application_security_group = aws.ec2.SecurityGroup("application_security_group",
     })
 
 application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
-    instance_type="t2.micro",
+    instance_type=instance_type,
     ami=ami_id,
     subnet_id=public_subnets[0],
     security_groups=[application_security_group.id],
