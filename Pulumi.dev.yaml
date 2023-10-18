@@ -16,4 +16,5 @@ config:
     {"cidr_block": "10.0.5.0/24"},
     {"cidr_block": "10.0.6.0/24"},
   ]
-  ami : "ami-0965d34d3bd887195"
+  ami_id : "ami-0965d34d3bd887195"
+  key_pair: "Webapp"

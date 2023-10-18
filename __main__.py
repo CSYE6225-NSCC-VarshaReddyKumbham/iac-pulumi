@@ -8,8 +8,8 @@ private_subnets_config = config.require_object("private_subnets_config")
 public_route_destination = config.require("publicRouteDestination")
 vpc_name = config.require("vpcName")
 igw_name = config.require("igwName")
-aws_region = config.get("aws:region")
-ami = config.get("ami")
+ami_id = config.require("ami_id")
+key_pair = config.require('key_pair')
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
@@ -137,10 +137,11 @@ application_security_group = aws.ec2.SecurityGroup("application_security_group",
 
 application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     instance_type="t2.micro",
-    ami=ami.id,
+    ami=ami_id,
     subnet_id=public_subnets[0],
     security_groups=[application_security_group.id],
     associate_public_ip_address=True,
+    key_name=key_pair,
     root_block_device={
         "volume_size": 25,
         "volume_type": "gp2",
