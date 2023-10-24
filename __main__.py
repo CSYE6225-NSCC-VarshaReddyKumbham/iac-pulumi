@@ -136,9 +136,88 @@ application_security_group = aws.ec2.SecurityGroup("application_security_group",
         cidr_blocks=app_ingress_cidr_block
     ),
     ],
+    egress=[aws.ec2.SecurityGroupEgressArgs(
+        from_port=0,
+        to_port=0,
+        protocol="-1",
+        cidr_blocks=["0.0.0.0/0"],
+    )],
     tags={
         "Name": "application security group",
     })
+
+rds_parameter_group = aws.rds.ParameterGroup("rds-parameter-group",
+    family="mariadb10.6",
+    parameters=[
+        aws.rds.ParameterGroupParameterArgs(
+            name="max_user_connections",
+            value=100,
+            apply_method="pending-reboot"
+        ),
+    ])
+
+rds_subnet_group = aws.rds.SubnetGroup("my-rds-subnet-group",
+    subnet_ids=private_subnets,
+    tags={
+        "Name": "rds-subnet-group",
+    }
+)
+
+database_security_group = aws.ec2.SecurityGroup("database_security_group",
+    description="Allow inbound traffic from EC2",
+    vpc_id=my_vpc.id,
+    ingress=[aws.ec2.SecurityGroupIngressArgs(
+        description="MySql/Aurora",
+        from_port=3306,
+        to_port=3306,
+        protocol="tcp",
+        security_groups=[application_security_group.id],
+    ),
+    ],
+    tags={
+        "Name": "database",
+    })
+
+rds_instance = aws.rds.Instance("csye6225",
+    allocated_storage=20,
+    engine="mariadb",
+    engine_version="10.6",
+    instance_class="db.t2.micro",
+    multi_az=False,
+    db_name="csye6225",
+    username="csye6225",
+    password="password99",
+    skip_final_snapshot=True,
+    storage_type="gp2",
+    publicly_accessible=False,
+    vpc_security_group_ids=[database_security_group.id],
+    db_subnet_group_name=rds_subnet_group.name,
+    parameter_group_name=rds_parameter_group.name,
+    apply_immediately=True,
+    identifier = "csye6225",
+    tags={
+        "Name": "csye6225-rds",
+    }
+)
+
+user_data_script = pulumi.Output.all(rds_instance.endpoint).apply(lambda values:
+f"""#!/bin/bash
+# Set your database configuration
+PORT=3000
+DB_NAME="Cloud_db"
+DB_USER="csye6225"
+DB_PASSWORD="password99"
+DB_DIALECT="mysql"
+CSV_FILE="/opt/Users.csv"
+# Create .env file
+echo "PORT=$PORT" >> /home/admin/webapp/.env
+echo "DB_NAME=$DB_NAME" >> /home/admin/webapp/.env
+echo "DB_PASSWORD=$DB_PASSWORD" >> /home/admin/webapp/.env
+echo "DB_USER=$DB_USER" >> /home/admin/webapp/.env
+echo "DB_HOST={values[0].split(":")[0]}" >> /home/admin/webapp/.env
+echo "DB_DIALECT=$DB_DIALECT" >> /home/admin/webapp/.env
+echo "CSV_FILE=$CSV_FILE" >> /home/admin/webapp/.env
+""")
 
 application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     instance_type=instance_type,
@@ -147,6 +226,8 @@ application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     security_groups=[application_security_group.id],
     associate_public_ip_address=True,
     key_name=key_pair,
+    user_data=user_data_script,
+    user_data_replace_on_change=False,
     root_block_device={
         "volume_size": 25,
         "volume_type": "gp2",
