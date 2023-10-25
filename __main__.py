@@ -146,8 +146,19 @@ application_security_group = aws.ec2.SecurityGroup("application_security_group",
         "Name": "application security group",
     })
 
+db_user = config.require('db_user')
+db_name = config.require('db_name')
+db_password = config.require('db_password')
+env_file_path = config.require('env_file_path')
+rds_instance_class = config.require('rds_instance_class')
+engine = config.require('engine')
+engine_version = config.require('engine_version')
+identifier = config.require('identifier')
+rds_parameter_group_family = config.require('rds_parameter_group_family')
+rds_storage_type = config.require('rds_storage_type')
+
 rds_parameter_group = aws.rds.ParameterGroup("rds-parameter-group",
-    family="mariadb10.6",
+    family=rds_parameter_group_family,
     parameters=[
         aws.rds.ParameterGroupParameterArgs(
             name="max_user_connections",
@@ -180,21 +191,21 @@ database_security_group = aws.ec2.SecurityGroup("database_security_group",
 
 rds_instance = aws.rds.Instance("csye6225",
     allocated_storage=20,
-    engine="mariadb",
-    engine_version="10.6",
-    instance_class="db.t2.micro",
+    engine=engine,
+    engine_version=engine_version,
+    instance_class=rds_instance_class,
     multi_az=False,
-    db_name="csye6225",
-    username="csye6225",
-    password="password99",
+    db_name=db_name,
+    username=db_user,
+    password=db_password,
+    identifier=identifier,
     skip_final_snapshot=True,
-    storage_type="gp2",
+    storage_type=rds_storage_type,
     publicly_accessible=False,
     vpc_security_group_ids=[database_security_group.id],
     db_subnet_group_name=rds_subnet_group.name,
     parameter_group_name=rds_parameter_group.name,
     apply_immediately=True,
-    identifier = "csye6225",
     tags={
         "Name": "csye6225-rds",
     }
@@ -203,21 +214,22 @@ rds_instance = aws.rds.Instance("csye6225",
 user_data_script = pulumi.Output.all(rds_instance.endpoint).apply(lambda values:
 f"""#!/bin/bash
 # Set your database configuration
-PORT=3000
-DB_NAME="Cloud_db"
-DB_USER="csye6225"
-DB_PASSWORD="password99"
-DB_DIALECT="mysql"
-CSV_FILE="/opt/Users.csv"
-# Create .env file
-echo "PORT=$PORT" >> /home/admin/webapp/.env
-echo "DB_NAME=$DB_NAME" >> /home/admin/webapp/.env
-echo "DB_PASSWORD=$DB_PASSWORD" >> /home/admin/webapp/.env
-echo "DB_USER=$DB_USER" >> /home/admin/webapp/.env
-echo "DB_HOST={values[0].split(":")[0]}" >> /home/admin/webapp/.env
-echo "DB_DIALECT=$DB_DIALECT" >> /home/admin/webapp/.env
-echo "CSV_FILE=$CSV_FILE" >> /home/admin/webapp/.env
-""")
+NEW_DB_NAME={db_name}
+NEW_DB_USER={db_user}
+NEW_DB_PASSWORD={db_password}
+NEW_DB_HOST={values[0].split(":")[0]}
+
+ENV_FILE_PATH={env_file_path}
+
+if [ -e "$ENV_FILE_PATH" ]; then
+sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
+-e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
+-e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
+-e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
+"$ENV_FILE_PATH"
+else
+echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
+fi""")
 
 application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     instance_type=instance_type,
@@ -227,7 +239,6 @@ application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     associate_public_ip_address=True,
     key_name=key_pair,
     user_data=user_data_script,
-    user_data_replace_on_change=False,
     root_block_device={
         "volume_size": 25,
         "volume_type": "gp2",

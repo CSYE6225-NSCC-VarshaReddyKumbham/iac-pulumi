@@ -1,26 +1,36 @@
-encryptionsalt: v1:D+LNDMZdGF0=:v1:UBDWYzK1lFwMZ5/2:mYhm3ukulzNSgVtfot4Nm+tq1f5rxw==
+encryptionsalt: v1:8OUmFui4BII=:v1:ux1/74XfMwnNQQFA:gfIDGH/7OApNv13FIx0NTML9Qovyaw==
 config:
-  aws:profile: dev
-  aws:region: us-east-1
-  vpcCidrBlock: 10.0.0.0/16
-  vpcName: csye6225-vpc-dev
-  igwName: csye6225-igw-dev
-  publicRouteDestination: 0.0.0.0/0
-  public_subnets_config : [
-    {"cidr_block": "10.0.1.0/24"},
-    {"cidr_block": "10.0.2.0/24"},
-    {"cidr_block": "10.0.3.0/24"}
-  ]
-  private_subnets_config : [
-    {"cidr_block": "10.0.4.0/24"},
-    {"cidr_block": "10.0.5.0/24"},
-    {"cidr_block": "10.0.6.0/24"},
-  ]
-  ami_id : "ami-08b9b61be1f3d2f92"
-  key_pair: "Webapp"
-  instance_type: "t2.micro"
-  app_port: 3000
-  https_ingress_cidr_block: ['0.0.0.0/0']
-  http_ingress_cidr_block: ['0.0.0.0/0']
-  ssh_ingress_cidr_block: ['155.33.134.14/32']
-  app_ingress_cidr_block: ['0.0.0.0/0']
+    aws:profile: dev
+    aws:region: us-east-1
+    vpcCidrBlock: 10.0.0.0/16
+    vpcName: csye6225-vpc-dev
+    igwName: csye6225-igw-dev
+    publicRouteDestination: 0.0.0.0/0
+    public_subnets_config : [
+      {"cidr_block": "10.0.1.0/24"},
+      {"cidr_block": "10.0.2.0/24"},
+      {"cidr_block": "10.0.3.0/24"}
+    ]
+    private_subnets_config : [
+      {"cidr_block": "10.0.4.0/24"},
+      {"cidr_block": "10.0.5.0/24"},
+      {"cidr_block": "10.0.6.0/24"},
+    ]
+    ami_id : "ami-01292d19727b00c30"
+    key_pair: "Webapp"
+    instance_type: "t2.micro"
+    app_port: 3000
+    https_ingress_cidr_block: ['0.0.0.0/0']
+    http_ingress_cidr_block: ['0.0.0.0/0']
+    ssh_ingress_cidr_block: ['155.33.134.14/32']
+    app_ingress_cidr_block: ['0.0.0.0/0']
+    db_user: "csye6225"
+    db_name: "csye6225"
+    db_password: "password99"
+    env_file_path: "/opt/csye6225/webapp/.env"
+    rds_instance_class: "db.t2.micro"
+    engine: "mariadb"
+    engine_version: "10.6"
+    identifier: "csye6225"
+    rds_parameter_group_family: "mariadb10.6"
+    rds_storage_type: "gp2"

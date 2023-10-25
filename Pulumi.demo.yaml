@@ -24,3 +24,13 @@ config:
   http_ingress_cidr_block: ['0.0.0.0/0']
   ssh_ingress_cidr_block: ['155.33.134.59/32']
   app_ingress_cidr_block: ['0.0.0.0/0']
+  db_user: "csye6225"
+  db_name: "csye6225"
+  db_password: "password99"
+  env_file_path: "/opt/csye6225/webapp/.env"
+  rds_instance_class: "db.t2.micro"
+  engine: "mariadb"
+  engine_version: "10.6"
+  identifier: "csye6225"
+  rds_parameter_group_family: "mariadb10.6"
+  rds_storage_type: "gp2"
