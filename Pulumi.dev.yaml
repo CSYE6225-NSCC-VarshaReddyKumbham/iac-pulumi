@@ -16,13 +16,13 @@ config:
       {"cidr_block": "10.0.5.0/24"},
       {"cidr_block": "10.0.6.0/24"},
     ]
-    ami_id : "ami-01292d19727b00c30"
+    ami_id : "ami-0b7e5a49647951043"
     key_pair: "Webapp"
     instance_type: "t2.micro"
     app_port: 3000
     https_ingress_cidr_block: ['0.0.0.0/0']
     http_ingress_cidr_block: ['0.0.0.0/0']
-    ssh_ingress_cidr_block: ['155.33.134.14/32']
+    ssh_ingress_cidr_block: ['73.218.147.89/32']
     app_ingress_cidr_block: ['0.0.0.0/0']
     db_user: "csye6225"
     db_name: "csye6225"

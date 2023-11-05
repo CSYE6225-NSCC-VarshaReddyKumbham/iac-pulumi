@@ -229,7 +229,37 @@ sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
 "$ENV_FILE_PATH"
 else
 echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
-fi""")
+fi
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -c /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+    -s
+sudo systemctl restart amazon-cloudwatch-agent""")
+
+cloudwatch_agent_role = aws.iam.Role(
+    "CloudWatchAgentRole",
+    assume_role_policy="""{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": "sts:AssumeRole",
+                "Principal": {
+                    "Service": "ec2.amazonaws.com"
+                },
+                "Effect": "Allow"
+            }
+        ]
+    }""",
+)
+
+cloudwatch_agent_server_policy_attachment = aws.iam.PolicyAttachment(
+    "CloudWatchAgentServerPolicyAttachment",
+    roles=[cloudwatch_agent_role.name],
+    policy_arn="arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+)
+
+instance_profile = aws.iam.InstanceProfile("cloudwatchAgentInstanceProfile", role=cloudwatch_agent_role.name)
 
 application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     instance_type=instance_type,
@@ -239,6 +269,7 @@ application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
     associate_public_ip_address=True,
     key_name=key_pair,
     user_data=user_data_script,
+    iam_instance_profile=instance_profile.name,
     root_block_device={
         "volume_size": 25,
         "volume_type": "gp2",
@@ -248,3 +279,13 @@ application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
 )
 
 pulumi.export('publicIp', application_ec2_instance.public_ip)
+
+zone = aws.route53.get_zone(name="dev.varshakumbhamwebapp.me",
+    private_zone=False)
+
+route = aws.route53.Record("route",
+    zone_id=zone.zone_id,
+    name=f"{zone.name}",
+    type="A",
+    ttl=300,
+    records=[application_ec2_instance.public_ip])
