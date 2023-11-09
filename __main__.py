@@ -16,6 +16,7 @@ https_ingress_cidr_block = config.require_object('https_ingress_cidr_block')
 http_ingress_cidr_block = config.require_object('http_ingress_cidr_block')
 ssh_ingress_cidr_block = config.require_object('ssh_ingress_cidr_block')
 app_ingress_cidr_block = config.require_object('app_ingress_cidr_block')
+domain_name = config.require('domain_name')
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
@@ -280,7 +281,7 @@ application_ec2_instance = aws.ec2.Instance("my-ec2-instance",
 
 pulumi.export('publicIp', application_ec2_instance.public_ip)
 
-zone = aws.route53.get_zone(name="dev.varshakumbhamwebapp.me",
+zone = aws.route53.get_zone(name=domain_name,
     private_zone=False)
 
 route = aws.route53.Record("route",

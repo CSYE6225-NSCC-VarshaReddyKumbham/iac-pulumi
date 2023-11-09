@@ -34,3 +34,4 @@ config:
     identifier: "csye6225"
     rds_parameter_group_family: "mariadb10.6"
     rds_storage_type: "gp2"
+    domain_name: "dev.varshakumbhamwebapp.me"
