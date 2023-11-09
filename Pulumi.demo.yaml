@@ -16,7 +16,7 @@ config:
     {"cidr_block": "10.0.5.0/24"},
     {"cidr_block": "10.0.6.0/24"},
   ]
-  ami_id : "ami-09282e880b4b2a0b2"
+  ami_id : "ami-0d3e84e2d41fe56bf"
   key_pair: "Webapp"
   instance_type: "t2.micro"
   app_port: 3000
@@ -34,3 +34,4 @@ config:
   identifier: "csye6225"
   rds_parameter_group_family: "mariadb10.6"
   rds_storage_type: "gp2"
+  domain_name: "demo.varshakumbhamwebapp.me"
