@@ -1,4 +1,4 @@
-encryptionsalt: v1:8OUmFui4BII=:v1:ux1/74XfMwnNQQFA:gfIDGH/7OApNv13FIx0NTML9Qovyaw==
+encryptionsalt: v1:DiU3bbi4z8c=:v1:USVarAYFzIPrwqz0:esaU4W4h55GP/APkdyBkZYqPPWgW5g==
 config:
     aws:profile: dev
     aws:region: us-east-1
@@ -16,7 +16,7 @@ config:
       {"cidr_block": "10.0.5.0/24"},
       {"cidr_block": "10.0.6.0/24"},
     ]
-    ami_id : "ami-0b7e5a49647951043"
+    ami_id : "ami-043218139ce219394"
     key_pair: "Webapp"
     instance_type: "t2.micro"
     app_port: 3000
