@@ -383,7 +383,7 @@ high_cpu_alarm = aws.cloudwatch.MetricAlarm('high-cpu-alarm',
     dimensions={
         "AutoScalingGroupName": auto_scaling_group.name,
     },
-    period = 60,
+    period = 300,
     evaluation_periods = 1,
     alarm_actions = [scaleup_policy.arn],
 )
@@ -397,7 +397,7 @@ low_cpu_alarm = aws.cloudwatch.MetricAlarm('low-cpu-alarm',
     dimensions={
         "AutoScalingGroupName": auto_scaling_group.name,
     },
-    period = 60,
+    period = 300,
     evaluation_periods = 1,
     alarm_actions = [scaledown_policy.arn],
 )
