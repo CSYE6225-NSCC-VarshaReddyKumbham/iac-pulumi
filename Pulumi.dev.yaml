@@ -16,7 +16,7 @@ config:
       {"cidr_block": "10.0.5.0/24"},
       {"cidr_block": "10.0.6.0/24"},
     ]
-    ami_id : "ami-043218139ce219394"
+    ami_id : "ami-0c6ffca566f12800d"
     key_pair: "Webapp"
     instance_type: "t2.micro"
     app_port: 3000
