@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_aws as aws
+import pulumi_gcp as gcp
 import base64
 
 config = pulumi.Config()
@@ -18,6 +19,94 @@ http_ingress_cidr_block = config.require_object('http_ingress_cidr_block')
 ssh_ingress_cidr_block = config.require_object('ssh_ingress_cidr_block')
 app_ingress_cidr_block = config.require_object('app_ingress_cidr_block')
 domain_name = config.require('domain_name')
+user_id = config.require('user_id')
+password = config.require('pass')
+
+# gcp_project = config.require('gcp:project')
+gcp_project = 'nscc-dev'
+
+gcs_bucket = gcp.storage.Bucket("my-nscc-dev-bucket",
+    name="varsha-nscc-dev-bucket",
+    force_destroy=True,
+    location="US",
+    public_access_prevention="enforced",
+    versioning= gcp.storage.BucketVersioningArgs(
+        enabled=True,
+    ))
+
+service_account = gcp.serviceaccount.Account("serviceAccount",
+    account_id="dev-service-account-id",
+    display_name="GCP Dev Service Account")
+
+service_account_key = gcp.serviceaccount.Key("service_account_key",
+    service_account_id=service_account.name,
+    public_key_type="TYPE_X509_PEM_FILE",
+    private_key_type="TYPE_GOOGLE_CREDENTIALS_FILE")
+
+basic_dynamodb_table = aws.dynamodb.Table("basic-dynamodb-table",
+    name="basic-dynamodb-table",
+    attributes=[
+        aws.dynamodb.TableAttributeArgs(
+            name="user_email",
+            type="S",
+        ),
+    ],
+    billing_mode="PROVISIONED",
+    hash_key="user_email",
+    read_capacity=20,
+    tags={
+        "Environment": "Dev",
+        "Name": "Track-Emails-Table",
+    },
+    # ttl=aws.dynamodb.TableTtlArgs(
+    #     attribute_name="TimeToExist",
+    #     enabled=False,
+    # ),
+    write_capacity=20)
+
+
+lambda_role = aws.iam.Role(
+    "lambda-role",
+    assume_role_policy='''{
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Principal": {
+                "Service": "lambda.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+        }]
+    }''',
+)
+
+lambda_role_policy_attachment = aws.iam.RolePolicyAttachment(
+    "lambda-role-policy-attachment",
+    policy_arn="arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+    role=lambda_role.name,
+)
+
+lambda_role_policy_attachment_basic = aws.iam.RolePolicyAttachment(
+    "lambda-role-policy-attachment-basic",
+    policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    role=lambda_role.name,
+)
+
+lambda_function = aws.lambda_.Function("testLambda",
+    code=pulumi.FileArchive("./../serverless/Archive.zip"),
+    role=lambda_role.arn,
+    handler="index.handler",
+    runtime="nodejs20.x",
+    environment=aws.lambda_.FunctionEnvironmentArgs(
+        variables={
+            "GCP_APP_CREDENTIALS": service_account_key.private_key,
+            "GCP_BUCKET": gcs_bucket.name,
+            "PROJECT_ID": gcp_project,
+            "USER_ID": user_id,
+            "PASSWORD": password,
+            "DYNAMODB_TABLE": basic_dynamodb_table.name
+        },
+    ))
 
 my_vpc = aws.ec2.Vpc("vpc",
     cidr_block = vpc_cidr_block,
@@ -228,40 +317,62 @@ rds_instance = aws.rds.Instance("csye6225",
     }
 )
 
-# user_data_script = pulumi.Output.all(rds_instance.endpoint).apply(lambda values:
-# f"""#!/bin/bash
-# # Set your database configuration
-# NEW_DB_NAME={db_name}
-# NEW_DB_USER={db_user}
-# NEW_DB_PASSWORD={db_password}
-# NEW_DB_HOST={values[0].split(":")[0]}
+sns_topic = aws.sns.Topic("AssignmentSubmissions", 
+    delivery_policy="""{
+        "http": {
+            "defaultHealthyRetryPolicy": {
+            "minDelayTarget": 20,
+            "maxDelayTarget": 20,
+            "numRetries": 3,
+            "numMaxDelayRetries": 0,
+            "numNoDelayRetries": 0,
+            "numMinDelayRetries": 0,
+            "backoffFunction": "linear"
+            },
+            "disableSubscriptionOverrides": false,
+            "defaultThrottlePolicy": {
+            "maxReceivesPerSecond": 1
+            }
+        }
+        }"""
+    )
 
-# ENV_FILE_PATH={env_file_path}
+with_sns = aws.lambda_.Permission("withSns",
+    action="lambda:InvokeFunction",
+    function=lambda_function.name,
+    principal="sns.amazonaws.com",
+    source_arn=sns_topic.arn)
 
-# if [ -e "$ENV_FILE_PATH" ]; then
-# sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
-# -e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
-# -e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
-# -e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
-# "$ENV_FILE_PATH"
-# else
-# echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
-# fi
-# sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-#     -a fetch-config \
-#     -m ec2 \
-#     -c /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
-#     -s
-# sudo systemctl restart amazon-cloudwatch-agent""")
+sns_lambda_subscription = aws.sns.TopicSubscription("userUpdatesSqsTarget",
+    topic=sns_topic.arn,
+    protocol="lambda",
+    endpoint=lambda_function.arn)
 
-user_data_script = rds_instance.endpoint.apply(lambda endpoint:
-    f"""#!/bin/bash
+
+ec2_role = aws.iam.Role("ec2-sns-publish-role", assume_role_policy="""{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}""")
+
+pulumi.export("sns_topic_arn", sns_topic.arn)
+
+user_data_script = pulumi.Output.all(sns_topic.arn, rds_instance.endpoint).apply(
+    lambda args:
+    base64.b64encode(f"""#!/bin/bash
 # Set your database configuration
 NEW_DB_NAME={db_name}
 NEW_DB_USER={db_user}
 NEW_DB_PASSWORD={db_password}
-NEW_DB_HOST={endpoint.split(":")[0]}
-
+NEW_DB_HOST={args[1].split(":")[0]}
+NEW_SNS_TOPIC_ARN={args[0]}
 ENV_FILE_PATH={env_file_path}
 
 if [ -e "$ENV_FILE_PATH" ]; then
@@ -269,6 +380,7 @@ if [ -e "$ENV_FILE_PATH" ]; then
            -e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
            -e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
            -e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
+            -e "s/SNS_TOPIC_ARN=.*/SNS_TOPIC_ARN=$NEW_SNS_TOPIC_ARN/" \
            "$ENV_FILE_PATH"
 else
     echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
@@ -279,35 +391,15 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -c /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
     -s
 sudo systemctl restart amazon-cloudwatch-agent
-""")
-
-base64_encoded_user_data = pulumi.Output.all(user_data_script).apply(lambda values:
-    base64.b64encode(values[0].encode('utf-8')).decode('utf-8')
-)
-
-cloudwatch_agent_role = aws.iam.Role(
-    "CloudWatchAgentRole",
-    assume_role_policy="""{
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Action": "sts:AssumeRole",
-                "Principal": {
-                    "Service": "ec2.amazonaws.com"
-                },
-                "Effect": "Allow"
-            }
-        ]
-    }""",
-)
+""".encode('utf-8')).decode('utf-8'))
 
 cloudwatch_agent_server_policy_attachment = aws.iam.PolicyAttachment(
     "CloudWatchAgentServerPolicyAttachment",
-    roles=[cloudwatch_agent_role.name],
+    roles=[ec2_role.name],
     policy_arn="arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
 )
 
-instance_profile = aws.iam.InstanceProfile("cloudwatchAgentInstanceProfile", role=cloudwatch_agent_role.name)
+instance_profile = aws.iam.InstanceProfile("cloudwatchAgentInstanceProfile", role=ec2_role.name)
 
 asg_launch_config = aws.ec2.LaunchTemplate("asg_launch_config",
     block_device_mappings=[aws.ec2.LaunchTemplateBlockDeviceMappingArgs(
@@ -335,7 +427,7 @@ asg_launch_config = aws.ec2.LaunchTemplate("asg_launch_config",
             "Name": "Web Server",
         },
     )],
-    user_data=base64_encoded_user_data,
+    user_data=user_data_script,
     )
 
 auto_scaling_group = aws.autoscaling.Group("auto_scaling_group",
@@ -452,3 +544,4 @@ route = aws.route53.Record("route",
         zone_id=application_load_balancer.zone_id,
         evaluate_target_health=True,
     )])
+

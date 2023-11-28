@@ -1,37 +1,42 @@
 encryptionsalt: v1:DiU3bbi4z8c=:v1:USVarAYFzIPrwqz0:esaU4W4h55GP/APkdyBkZYqPPWgW5g==
 config:
-    aws:profile: dev
-    aws:region: us-east-1
-    vpcCidrBlock: 10.0.0.0/16
-    vpcName: csye6225-vpc-dev
-    igwName: csye6225-igw-dev
-    publicRouteDestination: 0.0.0.0/0
-    public_subnets_config : [
-      {"cidr_block": "10.0.1.0/24"},
-      {"cidr_block": "10.0.2.0/24"},
-      {"cidr_block": "10.0.3.0/24"}
-    ]
-    private_subnets_config : [
-      {"cidr_block": "10.0.4.0/24"},
-      {"cidr_block": "10.0.5.0/24"},
-      {"cidr_block": "10.0.6.0/24"},
-    ]
-    ami_id : "ami-0c6ffca566f12800d"
-    key_pair: "Webapp"
-    instance_type: "t2.micro"
-    app_port: 3000
-    https_ingress_cidr_block: ['0.0.0.0/0']
-    http_ingress_cidr_block: ['0.0.0.0/0']
-    ssh_ingress_cidr_block: ['73.218.147.89/32']
-    app_ingress_cidr_block: ['0.0.0.0/0']
-    db_user: "csye6225"
-    db_name: "csye6225"
-    db_password: "password99"
-    env_file_path: "/opt/csye6225/webapp/.env"
-    rds_instance_class: "db.t2.micro"
-    engine: "mariadb"
-    engine_version: "10.6"
-    identifier: "csye6225"
-    rds_parameter_group_family: "mariadb10.6"
-    rds_storage_type: "gp2"
-    domain_name: "dev.varshakumbhamwebapp.me"
+  aws:profile: dev
+  aws:region: us-east-1
+  gcp:project: nscc-dev
+  iac-pulumi:ami_id: ami-072e3ca8155a2c9d5
+  iac-pulumi:app_ingress_cidr_block:
+    - 0.0.0.0/0
+  iac-pulumi:app_port: "3000"
+  iac-pulumi:db_name: csye6225
+  iac-pulumi:db_password: password99
+  iac-pulumi:db_user: csye6225
+  iac-pulumi:domain_name: dev.varshakumbhamwebapp.me
+  iac-pulumi:engine: mariadb
+  iac-pulumi:engine_version: "10.6"
+  iac-pulumi:env_file_path: /opt/csye6225/webapp/.env
+  iac-pulumi:http_ingress_cidr_block:
+    - 0.0.0.0/0
+  iac-pulumi:https_ingress_cidr_block:
+    - 0.0.0.0/0
+  iac-pulumi:identifier: csye6225
+  iac-pulumi:igwName: csye6225-igw-dev
+  iac-pulumi:instance_type: t2.micro
+  iac-pulumi:key_pair: Webapp
+  iac-pulumi:pass: Rudransh@2208
+  iac-pulumi:private_subnets_config:
+    - cidr_block: 10.0.4.0/24
+    - cidr_block: 10.0.5.0/24
+    - cidr_block: 10.0.6.0/24
+  iac-pulumi:public_subnets_config:
+    - cidr_block: 10.0.1.0/24
+    - cidr_block: 10.0.2.0/24
+    - cidr_block: 10.0.3.0/24
+  iac-pulumi:publicRouteDestination: 0.0.0.0/0
+  iac-pulumi:rds_instance_class: db.t2.micro
+  iac-pulumi:rds_parameter_group_family: mariadb10.6
+  iac-pulumi:rds_storage_type: gp2
+  iac-pulumi:ssh_ingress_cidr_block:
+    - 73.218.147.89/32
+  iac-pulumi:user_id: varshareddykumbham@varshakumbhamwebapp.me
+  iac-pulumi:vpcCidrBlock: 10.0.0.0/16
+  iac-pulumi:vpcName: csye6225-vpc-dev
