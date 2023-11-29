@@ -19,11 +19,7 @@ http_ingress_cidr_block = config.require_object('http_ingress_cidr_block')
 ssh_ingress_cidr_block = config.require_object('ssh_ingress_cidr_block')
 app_ingress_cidr_block = config.require_object('app_ingress_cidr_block')
 domain_name = config.require('domain_name')
-user_id = config.require('user_id')
-password = config.require('pass')
-
-# gcp_project = config.require('gcp:project')
-gcp_project = 'nscc-dev'
+aws_region = config.require('region')
 
 gcs_bucket = gcp.storage.Bucket("my-nscc-dev-bucket",
     name="varsha-nscc-dev-bucket",
@@ -43,16 +39,23 @@ service_account_key = gcp.serviceaccount.Key("service_account_key",
     public_key_type="TYPE_X509_PEM_FILE",
     private_key_type="TYPE_GOOGLE_CREDENTIALS_FILE")
 
+service_account_member = service_account.email.apply(lambda email: f"serviceAccount:{email}")
+
+iam_member = gcp.storage.BucketIAMMember("iam",
+    bucket=gcs_bucket.name,
+    role="roles/storage.objectAdmin",
+    member=service_account_member)
+
 basic_dynamodb_table = aws.dynamodb.Table("basic-dynamodb-table",
     name="basic-dynamodb-table",
     attributes=[
         aws.dynamodb.TableAttributeArgs(
-            name="user_email",
+            name="uuid",
             type="S",
         ),
     ],
     billing_mode="PROVISIONED",
-    hash_key="user_email",
+    hash_key="uuid",
     read_capacity=20,
     tags={
         "Environment": "Dev",
@@ -92,19 +95,21 @@ lambda_role_policy_attachment_basic = aws.iam.RolePolicyAttachment(
     role=lambda_role.name,
 )
 
+mailgun_api = config.require("mailgun_api")
+mailgun_domain = config.require("mailgun_domain")
 lambda_function = aws.lambda_.Function("testLambda",
     code=pulumi.FileArchive("./../serverless/Archive.zip"),
     role=lambda_role.arn,
     handler="index.handler",
     runtime="nodejs20.x",
+    timeout=60,
     environment=aws.lambda_.FunctionEnvironmentArgs(
         variables={
             "GCP_APP_CREDENTIALS": service_account_key.private_key,
             "GCP_BUCKET": gcs_bucket.name,
-            "PROJECT_ID": gcp_project,
-            "USER_ID": user_id,
-            "PASSWORD": password,
-            "DYNAMODB_TABLE": basic_dynamodb_table.name
+            "DYNAMODB_TABLE": basic_dynamodb_table.name,
+            "MAILGUN_API": mailgun_api,
+            "MAILGUN_DOMAIN": mailgun_domain
         },
     ))
 
@@ -348,7 +353,6 @@ sns_lambda_subscription = aws.sns.TopicSubscription("userUpdatesSqsTarget",
     protocol="lambda",
     endpoint=lambda_function.arn)
 
-
 ec2_role = aws.iam.Role("ec2-sns-publish-role", assume_role_policy="""{
     "Version": "2012-10-17",
     "Statement": [
@@ -362,6 +366,11 @@ ec2_role = aws.iam.Role("ec2-sns-publish-role", assume_role_policy="""{
     ]
 }""")
 
+sns_full_access_policy_attachment = aws.iam.RolePolicyAttachment("sns-full-access-policy-attachment",
+    policy_arn="arn:aws:iam::aws:policy/AmazonSNSFullAccess",
+    role=ec2_role.name
+)
+
 pulumi.export("sns_topic_arn", sns_topic.arn)
 
 user_data_script = pulumi.Output.all(sns_topic.arn, rds_instance.endpoint).apply(
@@ -373,6 +382,7 @@ NEW_DB_USER={db_user}
 NEW_DB_PASSWORD={db_password}
 NEW_DB_HOST={args[1].split(":")[0]}
 NEW_SNS_TOPIC_ARN={args[0]}
+NEW_AWS_REGION={aws_region}
 ENV_FILE_PATH={env_file_path}
 
 if [ -e "$ENV_FILE_PATH" ]; then
@@ -380,7 +390,8 @@ if [ -e "$ENV_FILE_PATH" ]; then
            -e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
            -e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
            -e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
-            -e "s/SNS_TOPIC_ARN=.*/SNS_TOPIC_ARN=$NEW_SNS_TOPIC_ARN/" \
+           -e "s/SNS_TOPIC_ARN=.*/SNS_TOPIC_ARN=$NEW_SNS_TOPIC_ARN/" \
+           -e "s/AWS_REGION=.*/AWS_REGION=$NEW_AWS_REGION/" \
            "$ENV_FILE_PATH"
 else
     echo "$ENV_FILE_PATH not found. Make sure the .env file exists"

@@ -3,7 +3,7 @@ config:
   aws:profile: dev
   aws:region: us-east-1
   gcp:project: nscc-dev
-  iac-pulumi:ami_id: ami-072e3ca8155a2c9d5
+  iac-pulumi:ami_id: ami-0d86f2e2644a976c8
   iac-pulumi:app_ingress_cidr_block:
     - 0.0.0.0/0
   iac-pulumi:app_port: "3000"
@@ -22,7 +22,8 @@ config:
   iac-pulumi:igwName: csye6225-igw-dev
   iac-pulumi:instance_type: t2.micro
   iac-pulumi:key_pair: Webapp
-  iac-pulumi:pass: Rudransh@2208
+  iac-pulumi:mailgun_api: 8e11cbd127aa695f970b1589ebcd0dd6-30b58138-4cd1f614
+  iac-pulumi:mailgun_domain: varshakumbhamwebapp.me
   iac-pulumi:private_subnets_config:
     - cidr_block: 10.0.4.0/24
     - cidr_block: 10.0.5.0/24
@@ -35,8 +36,8 @@ config:
   iac-pulumi:rds_instance_class: db.t2.micro
   iac-pulumi:rds_parameter_group_family: mariadb10.6
   iac-pulumi:rds_storage_type: gp2
+  iac-pulumi:region: us-east-1
   iac-pulumi:ssh_ingress_cidr_block:
     - 73.218.147.89/32
-  iac-pulumi:user_id: varshareddykumbham@varshakumbhamwebapp.me
   iac-pulumi:vpcCidrBlock: 10.0.0.0/16
   iac-pulumi:vpcName: csye6225-vpc-dev

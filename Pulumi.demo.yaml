@@ -2,36 +2,42 @@ encryptionsalt: v1:h6CHR6MaYaw=:v1:2hkJvebLNvamF+DB:3GMhEszA/TBwvjwEEpjwC+XkUipn
 config:
   aws:profile: demo
   aws:region: us-east-1
-  vpcCidrBlock: 10.0.0.0/16
-  vpcName: csye6225-vpc-demo
-  igwName: csye6225-igw-demo
-  publicRouteDestination: 0.0.0.0/0
-  public_subnets_config : [
-    {"cidr_block": "10.0.1.0/24"},
-    {"cidr_block": "10.0.2.0/24"},
-    {"cidr_block": "10.0.3.0/24"}
-  ]
-  private_subnets_config : [
-    {"cidr_block": "10.0.4.0/24"},
-    {"cidr_block": "10.0.5.0/24"},
-    {"cidr_block": "10.0.6.0/24"},
-  ]
-  ami_id : "ami-0d3e84e2d41fe56bf"
-  key_pair: "Webapp"
-  instance_type: "t2.micro"
-  app_port: 3000
-  https_ingress_cidr_block: ['0.0.0.0/0']
-  http_ingress_cidr_block: ['0.0.0.0/0']
-  ssh_ingress_cidr_block: ['155.33.134.59/32']
-  app_ingress_cidr_block: ['0.0.0.0/0']
-  db_user: "csye6225"
-  db_name: "csye6225"
-  db_password: "password99"
-  env_file_path: "/opt/csye6225/webapp/.env"
-  rds_instance_class: "db.t2.micro"
-  engine: "mariadb"
-  engine_version: "10.6"
-  identifier: "csye6225"
-  rds_parameter_group_family: "mariadb10.6"
-  rds_storage_type: "gp2"
-  domain_name: "demo.varshakumbhamwebapp.me"
+  gcp:project: nscc-demo-406420
+  iac-pulumi:ami_id: ami-0d3e84e2d41fe56bf
+  iac-pulumi:app_ingress_cidr_block:
+    - 0.0.0.0/0
+  iac-pulumi:app_port: "3000"
+  iac-pulumi:db_name: csye6225
+  iac-pulumi:db_password: password99
+  iac-pulumi:db_user: csye6225
+  iac-pulumi:domain_name: demo.varshakumbhamwebapp.me
+  iac-pulumi:engine: mariadb
+  iac-pulumi:engine_version: "10.6"
+  iac-pulumi:env_file_path: /opt/csye6225/webapp/.env
+  iac-pulumi:http_ingress_cidr_block:
+    - 0.0.0.0/0
+  iac-pulumi:https_ingress_cidr_block:
+    - 0.0.0.0/0
+  iac-pulumi:identifier: csye6225
+  iac-pulumi:igwName: csye6225-igw-demo
+  iac-pulumi:instance_type: t2.micro
+  iac-pulumi:key_pair: Webapp
+  iac-pulumi:mailgun_api: 8e11cbd127aa695f970b1589ebcd0dd6-30b58138-4cd1f614
+  iac-pulumi:mailgun_domain: varshakumbhamwebapp.me
+  iac-pulumi:private_subnets_config:
+    - cidr_block: 10.0.4.0/24
+    - cidr_block: 10.0.5.0/24
+    - cidr_block: 10.0.6.0/24
+  iac-pulumi:public_subnets_config:
+    - cidr_block: 10.0.1.0/24
+    - cidr_block: 10.0.2.0/24
+    - cidr_block: 10.0.3.0/24
+  iac-pulumi:publicRouteDestination: 0.0.0.0/0
+  iac-pulumi:rds_instance_class: db.t2.micro
+  iac-pulumi:rds_parameter_group_family: mariadb10.6
+  iac-pulumi:rds_storage_type: gp2
+  iac-pulumi:region: us-east-1
+  iac-pulumi:ssh_ingress_cidr_block:
+    - 155.33.134.59/32
+  iac-pulumi:vpcCidrBlock: 10.0.0.0/16
+  iac-pulumi:vpcName: csye6225-vpc-demo
