@@ -1,9 +1,9 @@
-encryptionsalt: v1:h6CHR6MaYaw=:v1:2hkJvebLNvamF+DB:3GMhEszA/TBwvjwEEpjwC+XkUipn2g==
+encryptionsalt: v1:1CBURLKRBbA=:v1:Dt/3/g6e/WeSG0hh:vP81ZC5eVwpu1zhxV/qwByEipbMm4w==
 config:
   aws:profile: demo
   aws:region: us-east-1
   gcp:project: nscc-demo-406420
-  iac-pulumi:ami_id: ami-0799a707efcfe3649
+  iac-pulumi:ami_id: ami-058bd2d568351da34
   iac-pulumi:app_ingress_cidr_block:
     - 0.0.0.0/0
   iac-pulumi:app_port: "3000"
