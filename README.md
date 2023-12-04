@@ -35,4 +35,4 @@
 
 
 ### Import SSL Certificate from Namecheap AWS Certificate Manager using AWS CLI
-aws acm import-certificate --profile demo --certificate fileb://demo_varshakumbhamwebapp_me.crt --certificate-chain fileb://demo_varshakumbhamwebapp_me.ca-bundle --private-key fileb://../private.key --region us-east-1`  
+aws acm import-certificate --profile demo --certificate fileb://demo_varshakumbhamwebapp_me.crt --certificate-chain fileb://demo_varshakumbhamwebapp_me.ca-bundle --private-key fileb://../private.key --region us-east-1
