@@ -210,13 +210,6 @@ loadbalancer_security_group = aws.ec2.SecurityGroup("loadbalancer_security_group
         protocol="tcp",
         cidr_blocks=https_ingress_cidr_block
     ),
-    aws.ec2.SecurityGroupIngressArgs(
-        description="HTTP",
-        from_port=80,
-        to_port=80,
-        protocol="tcp",
-        cidr_blocks=http_ingress_cidr_block
-    ),
     ],
     egress=[aws.ec2.SecurityGroupEgressArgs(
         from_port=0,
@@ -413,6 +406,7 @@ cloudwatch_agent_server_policy_attachment = aws.iam.PolicyAttachment(
 instance_profile = aws.iam.InstanceProfile("cloudwatchAgentInstanceProfile", role=ec2_role.name)
 
 asg_launch_config = aws.ec2.LaunchTemplate("asg_launch_config",
+    name="ASG_Launch_Template",
     block_device_mappings=[aws.ec2.LaunchTemplateBlockDeviceMappingArgs(
         device_name="/dev/sdf",
         ebs=aws.ec2.LaunchTemplateBlockDeviceMappingEbsArgs(
@@ -442,6 +436,7 @@ asg_launch_config = aws.ec2.LaunchTemplate("asg_launch_config",
     )
 
 auto_scaling_group = aws.autoscaling.Group("auto_scaling_group",
+    name='auto_scaling_group',
     desired_capacity=1,
     max_size=3,
     min_size=1,
@@ -505,6 +500,10 @@ low_cpu_alarm = aws.cloudwatch.MetricAlarm('low-cpu-alarm',
     alarm_actions = [scaledown_policy.arn],
 )
 
+certificate = aws.acm.get_certificate(domain=domain_name,
+    most_recent=True,
+    statuses=["ISSUED"])
+
 application_load_balancer = aws.lb.LoadBalancer("load-balancer",
     internal=False,
     load_balancer_type="application",
@@ -535,8 +534,9 @@ listener = aws.lb.Listener(
         "target_group_arn": target_group.arn,
     }],
     load_balancer_arn=application_load_balancer.arn,
-    port=80,
-    protocol="HTTP",
+    port=443,
+    protocol="HTTPS",
+    certificate_arn=certificate.arn,
 )
 
 attach_autoscaling_to_alb = aws.autoscaling.Attachment("attach_autoscaling_to_alb",
