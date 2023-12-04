@@ -3,7 +3,7 @@ config:
   aws:profile: demo
   aws:region: us-east-1
   gcp:project: nscc-demo-406420
-  iac-pulumi:ami_id: ami-0d3e84e2d41fe56bf
+  iac-pulumi:ami_id: ami-0799a707efcfe3649
   iac-pulumi:app_ingress_cidr_block:
     - 0.0.0.0/0
   iac-pulumi:app_port: "3000"
